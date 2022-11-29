@@ -1,19 +1,20 @@
+#include <stdlib.h>
+#include <stdio.h>
+
 #define q 3329
 #define n 256
 #define np 9 // np correspond to n'
 
-struct Rq
-{
-	int tab[n];
-};
-
-int BytesToBits(int *bytes, int nbytes)
+int *BytesToBits(int *bytes, int nbytes)
 {
 	// Convert bytes to bits
 	// nbytes l
 	// Return an array of 8l bits
 	int nbits = 8 * nbytes;
-	int bits[nbits];
+
+	// On crée le tableau dans lequel on va mettre le résultat. On reverra un pointeur vers celui-ci en sortie
+	int *bits;
+	bits = (int *)malloc(nbits * sizeof(int));
 
 	int i;
 
@@ -34,18 +35,45 @@ int BytesToBits(int *bytes, int nbytes)
 		}
 	}
 
-	return *bits;
+	return bits;
 }
 
-int CBD2(int *B, int *res)
+int *BitsToBytes(int *bits, int nbits)
+{
+	// Return an array of 8l bits
+	int nbytes = nbits / 8;
+
+	int *bytes;
+	bytes = (int *)malloc(nbytes * sizeof(int));
+
+	int i;
+	int j;
+
+	for (i = 0; i < nbytes; i++)
+	{
+		bytes[i] = 0;
+		int puissance2 = 1;
+		for (j = 0; i < 8; j++)
+		{
+			bytes[i] = bytes[i] + bits[i * 8 + j] * puissance2;
+			puissance2 = puissance2 * 2;
+		}
+	}
+
+	return bytes;
+}
+
+int *CBD2(int *B)
 {
 	int eta = 2;
-	int betas[512 * eta - 1];
-	*betas = BytesToBits(B, 64 * eta);
+
+	int *betas = BytesToBits(B, 64 * eta);
 
 	int a, b;
 
-	int fs[256];
+	// On crée le tableau dans lequel on va mettre le résultat. On reverra un pointeur vers celui-ci en sortie
+	int *fs;
+	fs = (int *)malloc(256 * sizeof(int));
 
 	int i;
 	for (i = 0; i <= 255; i++)
@@ -61,17 +89,21 @@ int CBD2(int *B, int *res)
 		fs[i] = a - b;
 	}
 
-	return *fs;
+	return fs;
 }
 
-int decode_l(int *B, int l)
+int *decode_l(int *B, int l)
 {
 	// l est un paramètre de la fonction decode
 	int tailleB = 256 * l;
-	int beta = BytesToBits(B, tailleB);
+	int *beta = BytesToBits(B, tailleB);
 
 	// Le résultat est un polynôme F de degré 255
-	int F[256];
+
+	// On crée le tableau dans lequel on va mettre le résultat. On reverra un pointeur vers celui-ci en sortie
+	int *F;
+	F = (int *)malloc(256 * sizeof(int));
+
 	for (int i = 0; i <= 255; i++)
 	{
 		F[i] = 0;
@@ -83,11 +115,12 @@ int decode_l(int *B, int l)
 			deuxpuissancej = 2 * deuxpuissancej;
 		}
 	}
+	return F;
 }
 
-int encode_l(int *F)
+int *encode_l(int *F, int l)
 {
-	int beta[];
+	int beta[256 * l];
 
 	for (int i = 0; i <= 255; i++)
 	{
@@ -100,6 +133,28 @@ int encode_l(int *F)
 			deuxpuissancej = 2 * deuxpuissancej;
 		}
 	}
-	// Est-ce qu'on renvoit bien la liste des bytes ?
+	// Est-ce qu'on renvoie bien la liste des bytes ?
+
 	return BitsToBytes(beta, 256 * l);
+}
+
+int main()
+{
+	int test[8] = {1, 2, 3, 4, 5, 6, 7, 8};
+
+	int *betas = BytesToBits(test, 8);
+
+	int loop;
+
+	for (loop = 0; loop < 10; loop++)
+	{
+		printf("%d ", test[loop]);
+	}
+
+	for (loop = 0; loop < 10; loop++)
+	{
+		printf("%d ", betas[loop]);
+	}
+
+	return 0;
 }
